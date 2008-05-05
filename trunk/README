@@ -1,0 +1,90 @@
+Introduction
+============
+
+  odvr is a user-space driver for Olympus digital voice recorders that do not
+support USB Mass Storage. There is no GUI at this time, and functionality is
+limited, but basic download and listing capabilities are implemented.
+
+Building
+========
+
+  There is no configure script at this time. You'll need libusb and libsndfile,
+and their associated development headers. To build, run:
+
+$ make odvr
+
+  A static x86 linux binary is included as odvr.x86.
+
+  odvr will require access to the user-space USB interface. It is recommended
+to place "41-odvr.rules" into "/etc/udev/rules.d" or setup your own udev rules
+rather than running odvr as root. After changing udev rules, don't forget to
+run "udevcontrol reload_rules" and to replugin your DVR.
+
+Installing
+==========
+
+ 1. Build odvr.
+ 2. Run "make install" as root.
+ 3. If you are not running Ubuntu, modify "41-odvr.rules" to fit your distro
+    and install it. Don't forget to reload the udev rules. The other option is
+    to run odvr as root, but this is not recommended.
+
+Usage
+=====
+
+Usage: odvr [options]
+-= Options =-
+  -h             : This help.
+  -v             : Print version.
+  -d <folder>    : Download all files in <folder>.
+  -e             : Download everything.
+  -l             : List all files.
+  -x <folder>    : Delete all recordings in <folder>.
+  -c             : Delete all recordings.
+  -y             : "yes" to all yes/no questions.
+  -r             : Reset the DVR. This may fix some sync issues.
+  -D             : Enable debug tracing.
+
+Examples
+========
+
+List recording information:
+
+$ odvr -l
+
+Download all recordings in folder B:
+
+$ odvr -d b
+
+Download all recordings in the scheduled folder: 
+
+$ odvr -d s
+
+List and download every recording:
+
+$ odvr -l -e
+
+
+Notes
+=====
+
+  Downloaded files are signed 16 bit PCM WAV files at the recorded sample rate.
+Olympus DVRs internally use a 3-bit differential PCM format with 14 bit
+resolution. Unfortunately, the Windows software converts from this format into
+lossy 4bit IMA ADPCM *and* it resamples. Files downloaded by odvr should be of
+higher quality than with the Windows software, but it does result in larger
+WAV files. It is recommended to recompress the WAV files with MP3, Vorbis, or
+Speex if file size is an issue.
+
+  Some programs may have difficulty playing or reading the odd bitrate WAV
+files. If they do, I recommend using "sox" to resample them into something more
+common, such as 44100hz.
+
+  Mac/PPC support is currently non-existent. There are several places in the
+odvr code that are endian sensitive, and the code hasn't been tested on
+big-endian machines. PPC Mac/Linux/BSD developers are more than welcome to
+submit patches!
+
+  odvr may get out-of-sync with the attached DVR. Use "-r" to force a DVR reset
+when odvr runs. For example, "odvr -r -l" will reset and then list recordings.
+
