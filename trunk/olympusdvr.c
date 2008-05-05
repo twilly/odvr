@@ -570,6 +570,15 @@ float odvr_length(filestat_t *stat){
   return stat->size / divisor[stat->quality];
 }
 
+uint32_t odvr_wavfilesize(filestat_t *stat){
+  float multiplier[] = { 2038, 3748, 1351, 0, 0, 5320, 15805, 2667, 1328 };
+
+  if(stat->quality >= sizeof(multiplier)/sizeof(multiplier[0]))
+      return 0;
+
+  return stat->size * multiplier[stat->quality];
+}
+
 int odvr_filestat(odvr h, uint8_t folder, uint8_t slot, filestat_t *stat){
   int fidx, sidx, nfiles;
   
