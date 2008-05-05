@@ -28,12 +28,14 @@
 #define ODVR_FOLDER_B       2
 #define ODVR_FOLDER_C       3
 #define ODVR_FOLDER_D       4
-#define ODVR_NUM_FOLDERS    5
+#define ODVR_FOLDER_S       4
+#define ODVR_NUM_FOLDERS    4
 
 #define ODVR_QUALITY_HQ     2
 #define ODVR_QUALITY_SP     0
 #define ODVR_QUALITY_LP     1
 #define ODVR_QUALITY_XHQ    8
+#define ODVR_QUALITY_NUM    9 /* Number of quality settings */
 
 typedef struct odvr * odvr;
 
@@ -79,6 +81,8 @@ char        odvr_foldername(odvr, const uint8_t);
 int         odvr_filestat(odvr, uint8_t folder, uint8_t slot, filestat_t *);
 /* file size to length convert */
 float       odvr_length(filestat_t *);
+/* file size to wav file size convert */
+uint32_t odvr_wavfilesize(filestat_t *stat);
 /* returns a description of a quality level */
 const char *odvr_quality_name(uint8_t quality);
 /* open a folder/slot for reading */
