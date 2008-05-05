@@ -1,0 +1,47 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+while(<>){
+  print;
+
+  if(/^(\S+)\s+(\S+)\s+S\s+(\S+)\s+s\s+(([0-9a-zA-Z]{2,4}\s*?){5})/){
+    my $raw = $4;
+    my @setup = map { hex($_) } split(/\s+/, $raw);
+    my %fields = decode_setup(@setup);
+    $fields{raw} = $raw;
+
+    #use Data::Dumper;
+    #print Dumper(\%fields);
+
+    print "  = $fields{request}: $fields{wValue}, $fields{wLength}, $fields{wLength}\n";
+  }
+}
+
+exit 0;
+
+sub decode_setup {
+  my @names = qw(bmRequestType bRequest wValue wIndex wLength);
+  my @requests = qw(GET_STATUS CLEAR_FEATURE reserved
+                    SET_FEATURE reserved SET_ADDRESS
+                    GET_DESCRIPTOR SET_DESCRIPTOR
+                    GET_CONFIGURATION SET_CONFIGURATION
+                    GET_INTERFACE SET_INTERFACE
+                    SYNCH_FRAME);
+  my @rttype = qw(Standard Class Vendor reserved);
+  my %fields = ('packet' => join(':', @_));
+  my $i = 0;
+  map { $fields{$names[$i++]} = $_ } @_;
+
+  # Translate: name for request
+  $fields{request} = $requests[$fields{bRequest}];
+
+  # Translate: request type bitfield
+  my $rt = 0;
+  vec($rt, 0, 8) = $fields{bmRequestType};
+  $fields{RequestTypeDirection} = vec($rt, 7, 1) ? 'Device-to-host' : 'Host-to-device';
+  $fields{RequestTypeType} = $rttype[vec($rt, 6, 1) * 2 +  vec($rt, 5, 1)];
+
+  return %fields;
+}

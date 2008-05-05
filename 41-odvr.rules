@@ -1,0 +1,1 @@
+SUBSYSTEM=="usb_device", SYSFS{idVendor}=="07b4", SYSFS{idProduct}=="020d", ACTION=="add", GROUP="audio", MODE="0664"

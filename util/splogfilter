@@ -1,0 +1,44 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use XML::Simple;
+
+my $spl = XMLin($ARGV[0] or 'SnoopyProExport.log',
+                ForceArrary => [ qw(urb) ]);
+
+use Data::Dumper;
+#print Dumper($spl);
+
+foreach my $urb (sort { $a->{timestamp} <=> $b->{timestamp} } @{$spl->{urb}}){
+  print "Config: $urb->{function}\n" if $urb->{endpoint} == -1;
+
+  if(ref $urb->{payload}{payloadbytes} eq 'HASH'){
+    #print "!!!\n";
+    next;
+  }
+
+  my %name = ( 0x02, => 'Out', 0x81 => 'In', 0x83 => 'Status' );
+  if(defined $name{$urb->{endpoint}}){
+    print "$name{$urb->{endpoint}}:" .
+      ' ' x (7 - length($name{$urb->{endpoint}}));
+    hexdump($urb->{payload}{payloadbytes});
+  }
+  print "\n";
+}
+
+exit 0;
+
+sub hexdump {
+  my @hexstr = split(//, shift);
+  my $len = $#hexstr + 1;
+  my $i = 0;
+
+  while(my @set = splice(@hexstr, 0, 4)){
+    my $pset = join('', @set);
+    print "\n" . ' ' x 8 if not $i % 8 and $i;
+    print "$pset ";
+    $i++;
+  }
+  print "\n" if not $len % 8;
+}
