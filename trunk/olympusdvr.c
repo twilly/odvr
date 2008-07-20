@@ -806,9 +806,14 @@ int odvr_save_wav(odvr h, uint8_t folder, uint8_t slot, int fd){
     case ODVR_QUALITY_XHQ:
       out_fmt.samplerate = 16000;
       break;
+    case ODVR_QUALITY_NEW_SP:
+    case ODVR_QUALITY_NEW_LP:
+    case ODVR_QUALITY_NEW_HQ:
+      set_error(h, "quality unsupported on your device");
+      return -13;
     default:
       /* we don't know about this type :( */
-      set_error(h, "unhandled quality");
+      set_error(h, "unknown quality");
       return -15;
   } 
 
