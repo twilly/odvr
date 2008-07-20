@@ -34,6 +34,9 @@
 #define ODVR_QUALITY_HQ     2
 #define ODVR_QUALITY_SP     0
 #define ODVR_QUALITY_LP     1
+#define ODVR_QUALITY_NEW_SP 5
+#define ODVR_QUALITY_NEW_LP 6
+#define ODVR_QUALITY_NEW_HQ 7
 #define ODVR_QUALITY_XHQ    8
 #define ODVR_QUALITY_NUM    9 /* Number of quality settings */
 
