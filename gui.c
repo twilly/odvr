@@ -643,13 +643,87 @@ static void select_files( actionData_t *actionData )
 static void clear(  actionData_t *actionData )
 {
     char buf[64];
+    GtkTreePath *path;
+    GtkTreeStore *file_store;
+    GtkTreeIter iter;
     
     sprintf(buf, "This will remove all files from folder %c\n Are you sure?",
 	    odvr_foldername(actionData->odvrData->dev, actionData->folderId+1));
-    if (acknowledge_ok_cancel(buf) == GTK_RESPONSE_OK) {
-	odvr_clear_folder(actionData->odvrData->dev, actionData->folderId+1);
-	
+    if (acknowledge_ok_cancel(buf) != GTK_RESPONSE_OK)
+	return;
+
+    odvr_clear_folder(actionData->odvrData->dev, actionData->folderId+1);
+
+    /* Remove the items from the store */
+    file_store= actionData->odvrData->file_store;
+    path = gtk_tree_path_new_from_indices(actionData->folderId, 0, -1);
+    if (gtk_tree_model_get_iter(GTK_TREE_MODEL(file_store), &iter, path)) {
+#if 0
+	    /* Disconnect from the viewer while deleting, otherwise it is
+	       wasting time refreshing the display as each row is deleted. */
+	    g_object_ref(GTK_TREE_MODEL(file_store));
+	    gtk_tree_view_set_model(GTK_TREE_VIEW(actionData->odvrData->view), 
+				    NULL);
+#endif
+	    while (gtk_tree_store_remove(file_store, &iter)) {
+	    }
+
+#if 0
+	    /* Re-attach model to view */
+	    gtk_tree_view_set_model(GTK_TREE_VIEW(actionData->odvrData->view),
+				    GTK_TREE_MODEL(file_store)); 
+	    g_object_unref(GTK_TREE_MODEL(file_store));
+#endif
+   }
+
+   gtk_tree_path_free(path);	
+}
+
+static void clear_all(  actionData_t *actionData )
+{
+    char folderId;
+    char buf[64];
+    GtkTreePath *path;
+    GtkTreeStore *file_store;
+    GtkTreeIter iter;
+    
+    sprintf(buf, "This will remove all files from the device\n Are you sure?");
+    if (acknowledge_ok_cancel(buf) != GTK_RESPONSE_OK)
+	return;
+
+    file_store= actionData->odvrData->file_store;
+
+#if 1
+    /* Disconnect from the viewer while deleting, otherwise it is
+       wasting time refreshing the display as each row is deleted. */
+    g_object_ref(GTK_TREE_MODEL(file_store));
+    gtk_tree_view_set_model(GTK_TREE_VIEW(actionData->odvrData->view), 
+			    NULL);
+#endif
+
+    for (folderId=0; 
+	 folderId<odvr_foldercount(actionData->odvrData->dev); 
+	 folderId++) {
+	odvr_clear_folder(actionData->odvrData->dev, folderId+1);
+
+	/* Remove the items from the store */
+	path = gtk_tree_path_new_from_indices(folderId, 0, -1);
+	if (gtk_tree_model_get_iter(GTK_TREE_MODEL(file_store), &iter, path)) {
+	    while (gtk_tree_store_remove(file_store, &iter)) {
+	    }
+
+	}
+
+	gtk_tree_path_free(path);
     }
+   
+#if 1
+	    /* Re-attach model to view */
+	    gtk_tree_view_set_model(GTK_TREE_VIEW(actionData->odvrData->view),
+				    GTK_TREE_MODEL(file_store)); 
+	    g_object_unref(GTK_TREE_MODEL(file_store));
+#endif
+
 }
 
 /* transfer button pressed */
@@ -863,6 +937,18 @@ void add_menus(odvrData_t *odvrData, int numFolders)
 	    gtk_widget_hide (menu_item);
 	}
     }
+
+    menu_item = gtk_menu_item_new_with_label ("All");
+    gtk_menu_shell_append (GTK_MENU_SHELL (clear_menu), menu_item);
+    actionData.action = ACTION_CLEAR;
+    actionData.folderId = -1;
+    actionData.odvrData = odvrData;
+    g_signal_connect_swapped (G_OBJECT (menu_item), "activate",
+			      G_CALLBACK (clear_all),
+			      (gpointer) g_memdup(&actionData, sizeof(actionData)) );
+
+    gtk_widget_show (menu_item);
+
 
     clear_item = gtk_menu_item_new_with_label ("Clear");
     gtk_widget_show (clear_item);
