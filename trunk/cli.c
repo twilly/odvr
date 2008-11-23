@@ -25,7 +25,7 @@
 #include <ctype.h>
 #include "olympusdvr.h"
 
-#define VERSION    "0.1.4.1"
+#define VERSION    "0.1.5"
 
 void download_folder(odvr dev, uint8_t folder);
 void download_folder_raw(odvr dev, uint8_t folder);
