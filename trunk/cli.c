@@ -271,7 +271,9 @@ int user_confirmed(const char *action){
   if(action)
     printf("Going to %s.\n", action);
   printf("Are you sure (yes/no)? ");
-  fgets(answer, 64, stdin);
+  if(!fgets(answer, 64, stdin)){
+    return 0; /* no input */
+  }
 
   /* lowercase and check for "yes" or "y" */
   for(i = 0; i < 64 && answer[i]; i++)
