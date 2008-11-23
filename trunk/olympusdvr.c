@@ -748,6 +748,41 @@ int odvr_read_block(odvr h, void *block, int maxbytes, uint8_t quality){
   return nsamples;
 }
 
+/* returns raw data */
+int odvr_read_raw_block(odvr h, void *block, int maxbytes, uint8_t quality){
+  uint8_t chunk[576 + 6]; /* +6 for shift overrun */
+  int     len, i, size;
+
+  if(maxbytes < odvr_block_size(h)){
+    set_error(h, "odvr_read_block() requires a larger block size");
+    return -5;
+  }
+
+  if((size = try_usb_bulk_read(h, 1, chunk, 576)) < 0)
+    return -10;
+
+  len = chunk[0];
+  len <<= 8;
+  len |= chunk[1];
+  len *= 2;
+
+  if(len == 0){
+    /* ack the download */
+    if(cmd_check(h))
+      return -15;
+  }
+
+  for(i=0; i<size; i++)
+   if(i < maxbytes)
+    ((uint8_t*)block)[i] = chunk[i];
+
+  if(len <= 0)
+   size = 0;
+
+  return size;
+}
+
+
 int odvr_open_file(odvr h, uint8_t folder, uint8_t slot){
   uint8_t packet[64];
 
@@ -848,6 +883,60 @@ int odvr_save_wav(odvr h, uint8_t folder, uint8_t slot, int fd){
   sf_close(out);
   return 0;
 }
+
+int odvr_save_raw(odvr h, uint8_t folder, uint8_t slot, int fd){
+  int16_t    block[4096];
+  filestat_t stat;
+  int        ns;
+  int8_t     version;
+
+  if(odvr_filestat(h, folder, slot, &stat))
+    return -10;
+
+  version = 'o';
+  if(write(fd, &version, 1) != 1)return -40;
+  version = 'd';
+  if(write(fd, &version, 1) != 1)return -40;
+  version = 'v';
+  if(write(fd, &version, 1) != 1)return -40;
+  version = 'r';
+  if(write(fd, &version, 1) != 1)return -40;
+  version = 1;
+  if(write(fd, &version, 1) != 1)return -40;
+
+  /* filestat */
+
+  if(write(fd, &stat.folder, 1) != 1)return -40;
+  if(write(fd, &stat.slot,   1) != 1)return -40;
+  if(write(fd, &stat.id,     2) != 2)return -40;
+  if(write(fd, &stat.size,   2) != 2)return -40;
+  if(write(fd, &stat.month,  1) != 1)return -40;
+  if(write(fd, &stat.day,    1) != 1)return -40;
+  if(write(fd, &stat.year,   1) != 1)return -40;
+  if(write(fd, &stat.hour,   1) != 1)return -40;
+  if(write(fd, &stat.min,    1) != 1)return -40;
+  if(write(fd, &stat.sec,    1) != 1)return -40;
+  if(write(fd, &stat.quality, 1)!= 1)return -40;
+
+  /* download */
+  if(odvr_open_file(h, folder, slot) < 0)
+    return -35;
+  while((ns = odvr_read_raw_block(h, block,
+                              4096 * sizeof(uint16_t), stat.quality)) > 0){
+    if(write(fd, &ns, 2) != 2)return -40;
+    if(write(fd, block, ns) != ns){
+      set_error(h, "failed to write data");
+      return -40;
+    }
+  }
+
+  /* error in odvr_read_block */
+  if(ns < 0)
+    return ns;
+
+  return 0;
+}
+
 
 int odvr_clear_folder(odvr h, uint8_t folder){
   uint8_t packet[64];

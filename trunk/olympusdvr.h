@@ -96,6 +96,8 @@ int         odvr_block_size(odvr);
 int         odvr_read_block(odvr, void *block, int maxbytes, uint8_t quality);
 /* open, read, and save a WAV file */
 int         odvr_save_wav(odvr, uint8_t folder, uint8_t slot, int fd);
+/* open, read, and save a raw data file */
+int         odvr_save_raw(odvr, uint8_t folder, uint8_t slot, int fd);
 /* delete a whole folder */
 int         odvr_clear_folder(odvr, uint8_t folder);
 
