@@ -28,20 +28,22 @@
 #define VERSION    "0.1.4.1"
 
 void download_folder(odvr dev, uint8_t folder);
+void download_folder_raw(odvr dev, uint8_t folder);
+
 void print_listing(odvr dev);
 int  user_confirmed(const char *);
 void print_usage(void);
 
 int main(int argc, char *argv[]){
   int         opt, opt_download, opt_ls, opt_reset, opt_debug,
-              opt_clear, opt_delete, opt_yesall;
+              opt_clear, opt_delete, opt_yesall, opt_raw;
   int         i, open_flags;
   const char *model;
   odvr        dev;
 
   opt_ls = opt_download = opt_reset = opt_debug = opt_clear =
-    opt_delete = opt_yesall = 0;
-  while((opt = getopt(argc, argv, "hvlerDd:cx:y")) != -1){
+    opt_delete = opt_yesall = opt_raw = 0;
+  while((opt = getopt(argc, argv, "hvleErDd:cx:y")) != -1){
     switch(opt){
     case 'h':
       print_usage();
@@ -51,6 +53,9 @@ int main(int argc, char *argv[]){
       exit(1);
     case 'e':
       opt_download = 1;
+      break;
+    case 'E':
+      opt_raw = 1;
       break;
     case 'r':
       opt_reset = 1;
@@ -130,6 +135,10 @@ int main(int argc, char *argv[]){
             odvr_foldercode(dev, opt_download) <= odvr_foldercount(dev)){
     download_folder(dev, odvr_foldercode(dev, opt_download));
   }
+
+  if(opt_raw != 0)
+    for(i = ODVR_FOLDER_A; i <= odvr_foldercount(dev); i++)
+      download_folder_raw(dev, i);
 
   if(opt_clear){
     if(opt_yesall || user_confirmed("delete all recordings")){
@@ -220,6 +229,41 @@ void download_folder(odvr dev, uint8_t folder){
   }
 }
 
+void download_folder_raw(odvr dev, uint8_t folder){
+  filestat_t  instat;
+  struct stat outstat;
+  FILE       *out;
+  uint8_t     slot;
+  char        fn[128];
+
+  for(slot = 1; slot <= odvr_filecount(dev, folder); slot++){
+    if(odvr_filestat(dev, folder, slot, &instat) < 0){
+      fprintf(stderr, "Error getting file instat: %s\n", odvr_error(dev));
+      continue;
+    }
+
+    sprintf(fn, "D%c_%04d.raw", odvr_foldername(dev, folder), instat.id);
+
+    if(stat(fn, &outstat) == 0){
+      fprintf(stderr, "\"%s\" already exists. Skipping this file.\n", fn);
+      continue;
+    }
+
+    if((out = fopen(fn, "w+")) == NULL){
+      fprintf(stderr, "Error opening \"%s\" for writing: %s\n",
+          fn, strerror(errno));
+      continue;
+    }
+
+    printf("Downloading \"%s\"...\n", fn);
+    if(odvr_save_raw(dev, folder, slot, fileno(out)))
+      fprintf(stderr, "Error downloading \"%s\": %s\n", fn, odvr_error(dev));
+
+    fclose(out);
+  }
+}
+
+
 int user_confirmed(const char *action){
   char answer[64];
   int  i;
@@ -254,5 +298,6 @@ void print_usage(void){
     "  -y             : \"yes\" to all yes/no questions.\n"
     "  -r             : Reset the DVR. This may fix some sync issues.\n"
     "  -D             : Enable debug tracing.\n"
+    "  -E             : Download everything in RAW format.\n"
   );
 }
