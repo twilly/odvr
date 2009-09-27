@@ -208,7 +208,8 @@ void download_folder(odvr dev, uint8_t folder){
       continue;
     }
 
-    sprintf(fn, "D%c_%04d.wav", odvr_foldername(dev, folder), instat.id);
+    sprintf(fn, "D%c_%04d_%02d.wav", odvr_foldername(dev, folder), instat.id,
+            slot);
 
     if(stat(fn, &outstat) == 0){
       fprintf(stderr, "\"%s\" already exists. Skipping this file.\n", fn);
