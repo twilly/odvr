@@ -10,6 +10,12 @@ capabilities are implemented.
 Building
 ========
 
+  Build dependencies:
+
+```
+sudo apt-get update && sudo apt-get install libusb-dev libgtk2.0-dev libsndfile1-dev -y
+```
+
   There is no configure script at this time. Libusb and libsndfile,
 and their associated development headers, are required. To build, run:
 
