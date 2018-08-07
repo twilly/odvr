@@ -1,1 +1,1 @@
-SUBSYSTEM=="usb", SYSFS{idVendor}=="07b4", SYSFS{idProduct}=="020d", ACTION=="add", GROUP="audio", MODE="0664"
+SUBSYSTEM=="usb", ATTR{idVendor}=="07b4", ATTR{idProduct}=="020d", ACTION=="add", GROUP="audio", MODE="0664"
