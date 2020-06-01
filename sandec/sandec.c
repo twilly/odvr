@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 typedef int (__cdecl *SAN_DEC)(uint8_t *in, uint8_t *out, int mode, int bit_size);
 typedef int (__cdecl *SAN_DEC_PULCOD2_INIT)(int a, int b);
@@ -80,7 +81,7 @@ Ussage: sandec [filename].raw\n");
 	
    HINSTANCE hLibrary = LoadLibrary("san_dec.dll");
    if (hLibrary == NULL) 
-   {
+   {  
       printf("Unable to load san_dec.dll!\n");
       return -1;
    }
@@ -112,10 +113,10 @@ Ussage: sandec [filename].raw\n");
    int bit_size = 16;
    int mode = 1;   
    
-   fd = open(argv[1],O_RDONLY|O_BINARY);
+   fd = open(argv[1], O_RDONLY|O_BINARY);
    if(fd<0)
    {
-      printf("Unable to open '%s'!\n",argv[1]);
+      printf("Unable to open '%s' for reading!\n",argv[1]);
       return -1;
    }
  
@@ -168,12 +169,16 @@ Ussage: sandec [filename].raw\n");
    filename[str_len-4] = '.';
    
    fd2 = open(filename, O_CREAT|O_WRONLY|O_BINARY|O_EXCL);
+
    if(fd2<0)
    {
-      printf("Unable to open '%s'!\n", filename);
+      char cwd[512];
+      getcwd(cwd, sizeof(cwd));
+
+      printf("Unable to open '%s' for writing! Return code %d, cwd %s \n", filename, fd2, cwd);
       return -1;
    }
-   
+
    ret = wave_header(out, 0, freq);
  
    ret = write(fd2, out, ret);

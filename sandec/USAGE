@@ -1,0 +1,2 @@
+make
+wine ./sandec.exe.so [filename]
