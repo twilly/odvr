@@ -14,7 +14,7 @@ GUICFLAGS  = `pkg-config gtk+-2.0 --cflags`
 LDADD   = `pkg-config gtk+-2.0 --libs`
 CFLAGS+=$(GUICFLAGS)
 
-all: odvr odvr-gui
+all: odvr odvr-gui buildsandec
 
 install: odvr odvr-gui
 	install -o root -g root -m 755 odvr $(PREFIX)/bin
@@ -47,6 +47,9 @@ odvr_icons.c: odvr_icons.h
 
 odvr-gui: odvr_icons.o gui.o odvr_gui.o odvr_date.o odvr_cfg.o olympusdvr.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS) $(LDADD)
+
+buildsandec: sandec
+	cd sandec && $(MAKE)
 
 clean:
 	-rm -f *.o *~ \#*\# $(BINS) *.deb odvr_icons.h
