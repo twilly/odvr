@@ -23,11 +23,13 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <utime.h>
+#include <time.h>
 #include "olympusdvr.h"
 
 #define VERSION    "0.1.5"
 
-void download_folder(odvr dev, uint8_t folder);
+void download_folder(odvr dev, uint8_t folder, int opt_time);
 void download_folder_raw(odvr dev, uint8_t folder);
 
 void print_listing(odvr dev);
@@ -36,14 +38,14 @@ void print_usage(void);
 
 int main(int argc, char *argv[]){
   int         opt, opt_download, opt_ls, opt_reset, opt_debug,
-              opt_clear, opt_delete, opt_yesall, opt_raw;
+              opt_clear, opt_delete, opt_yesall, opt_raw, opt_time;
   int         i, open_flags;
   const char *model;
   odvr        dev;
 
   opt_ls = opt_download = opt_reset = opt_debug = opt_clear =
-    opt_delete = opt_yesall = opt_raw = 0;
-  while((opt = getopt(argc, argv, "hvleErDd:cx:y")) != -1){
+    opt_delete = opt_yesall = opt_raw = opt_time = 0;
+  while((opt = getopt(argc, argv, "hvleErDd:cx:yt")) != -1){
     switch(opt){
     case 'h':
       print_usage();
@@ -78,6 +80,9 @@ int main(int argc, char *argv[]){
       break;
     case 'c':
       opt_clear = 1;
+      break;
+    case 't':
+      opt_time = 1;
       break;
     case 'x':
       if(optarg[1] == '\0')
@@ -130,10 +135,10 @@ int main(int argc, char *argv[]){
 
   if(opt_download == 1){
     for(i = ODVR_FOLDER_A; i <= odvr_foldercount(dev); i++)
-      download_folder(dev, i);
+      download_folder(dev, i, opt_time);
   } else if(opt_download > 1 &&
             odvr_foldercode(dev, opt_download) <= odvr_foldercount(dev)){
-    download_folder(dev, odvr_foldercode(dev, opt_download));
+    download_folder(dev, odvr_foldercode(dev, opt_download), opt_time);
   }
 
   if(opt_raw != 0)
@@ -195,12 +200,48 @@ void print_listing(odvr dev){
   }
 }
 
-void download_folder(odvr dev, uint8_t folder){
+struct tm odvr_time(filestat_t stat) {
+  struct tm result;
+
+  result.tm_year = stat.year + 2000 - 1900;
+  result.tm_mon = stat.month - 1;
+  result.tm_mday = stat.day;
+  result.tm_hour = stat.hour;
+  result.tm_min = stat.min;
+  result.tm_sec = stat.sec;
+  result.tm_isdst = -1;
+
+  return result;
+}
+
+void set_file_times(char fn[128], filestat_t stat) {
+  struct utimbuf new_times;
+  struct tm timeinfo;
+
+  timeinfo = odvr_time(stat);
+
+  new_times.actime = mktime(&timeinfo);
+  new_times.modtime = mktime(&timeinfo);
+  utime(fn, &new_times);
+}
+
+void odvr_filetime(char *result, filestat_t stat) {
+  struct tm timeinfo;
+
+  timeinfo = odvr_time(stat);
+
+  sprintf(result, "%04d%02d%02d-%02d%02d%02d", timeinfo.tm_year + 1900,
+          timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour,
+          timeinfo.tm_min, timeinfo.tm_sec);
+}
+
+void download_folder(odvr dev, uint8_t folder, int opt_time){
   filestat_t  instat;
   struct stat outstat;
   FILE       *out;
   uint8_t     slot;
   char        fn[128];
+  char        ftime[32];
 
   for(slot = 1; slot <= odvr_filecount(dev, folder); slot++){
     if(odvr_filestat(dev, folder, slot, &instat) < 0){
@@ -208,8 +249,13 @@ void download_folder(odvr dev, uint8_t folder){
       continue;
     }
 
-    sprintf(fn, "D%c_%04d_%02d.wav", odvr_foldername(dev, folder), instat.id,
-            slot);
+    if (opt_time > 0) {
+      odvr_filetime(ftime, instat);
+      sprintf(fn, "%c-%s.wav", odvr_foldername(dev, folder), ftime);
+    } else {
+      sprintf(fn, "D%c_%04d_%02d.wav", odvr_foldername(dev, folder), instat.id,
+              slot);
+    }
 
     if(stat(fn, &outstat) == 0){
       fprintf(stderr, "\"%s\" already exists. Skipping this file.\n", fn);
@@ -227,6 +273,7 @@ void download_folder(odvr dev, uint8_t folder){
       fprintf(stderr, "Error downloading \"%s\": %s\n", fn, odvr_error(dev));
 
     fclose(out);
+    set_file_times(fn, instat);
   }
 }
 
@@ -261,6 +308,7 @@ void download_folder_raw(odvr dev, uint8_t folder){
       fprintf(stderr, "Error downloading \"%s\": %s\n", fn, odvr_error(dev));
 
     fclose(out);
+    set_file_times(fn, instat);
   }
 }
 
@@ -302,5 +350,6 @@ void print_usage(void){
     "  -r             : Reset the DVR. This may fix some sync issues.\n"
     "  -D             : Enable debug tracing.\n"
     "  -E             : Download everything in RAW format.\n"
+    "  -t             : Format downloaded wav files names as F-YYYYmmdd-HHMMss.\n"
   );
 }
