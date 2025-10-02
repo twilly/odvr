@@ -318,7 +318,7 @@ int odvr_reset(odvr h, int flags){
   free(new);
 
   return 0;
-} 
+}
 
 static int valid_status(odvr h, const uint8_t *packet){
   if(! (packet[0] == 0x06 ||
@@ -411,7 +411,7 @@ const char *odvr_model(odvr h){
 
   memset(packet, 0, 64);
   packet[0] = 0xb2;
-  
+
   if(try_usb_bulk_write(h, 2, packet, 64) < 0)
     return NULL;
 
@@ -494,7 +494,7 @@ static int get_folder_metadata(odvr h, uint8_t folder){
     return -5;
   if(num_files == 0)
     return 0;
- 
+
   /* pre-allocate metadata */
   fidx = FOLDER_IDX(folder);
   for(sidx = 0; sidx < num_files; sidx++){
@@ -581,7 +581,7 @@ uint32_t odvr_wavfilesize(filestat_t *stat){
 
 int odvr_filestat(odvr h, uint8_t folder, uint8_t slot, filestat_t *stat){
   int fidx, sidx, nfiles;
-  
+
   if(folder < 1 || folder > odvr_foldercount(h))
     return -10;
 
@@ -604,7 +604,7 @@ int odvr_filestat(odvr h, uint8_t folder, uint8_t slot, filestat_t *stat){
 
 const char *odvr_quality_name(uint8_t quality){
   const char *quality_names[9] =
-    { "SP", "LP", "HQ", NULL, NULL, "SP", "LP", "HQ",
+    { "SP", "LP", "HQ", NULL, NULL, "NSP", "NLP", "NHQ",
       "XHQ" };
 
   if(quality >= sizeof(quality_names)/sizeof(quality_names[0])){
@@ -850,7 +850,7 @@ int odvr_save_wav(odvr h, uint8_t folder, uint8_t slot, int fd){
       /* we don't know about this type :( */
       set_error(h, "unknown quality");
       return -15;
-  } 
+  }
 
   /* check valid ouput */
   if(!sf_format_check(&out_fmt)){
@@ -946,7 +946,7 @@ int odvr_clear_folder(odvr h, uint8_t folder){
   packet[1] = folder;
   packet[2] = 0xff;
   packet[3] = 0xff;
- 
+
   if(prepare(h))
     return -10;
 
@@ -958,4 +958,3 @@ int odvr_clear_folder(odvr h, uint8_t folder){
 
   return 0;
 }
-
