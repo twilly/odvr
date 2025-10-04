@@ -40,7 +40,7 @@ Running
 =======
 
   odvr *requires* access to the user-space USB interface. It is recommended
-to place "41-odvr.rules" into "/etc/udev/rules.d" or setup your own udev rules
+to place `41-odvr.rules` into `/etc/udev/rules.d` or setup your own udev rules
 rather than running odvr as root. After changing udev rules, don't forget to
 run "udevcontrol reload_rules" and to replugin your DVR.
 
@@ -56,7 +56,8 @@ Usage
 =====
 
 Usage: odvr [options]
--= Options =-
+
+  -= Options =-
 
 ```
   -h             : This help.
