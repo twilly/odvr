@@ -19,9 +19,11 @@ sudo apt-get update && sudo apt-get install libusb-dev libgtk2.0-dev libsndfile1
   There is no configure script at this time. Libusb and libsndfile,
 and their associated development headers, are required. To build, run:
 
+```
 $ make odvr
+```
 
-  A static x86 linux binary is included as odvr.x86.
+  A static x86 linux binary is included as `odvr.x86`.
 
 
 Installing
@@ -29,7 +31,7 @@ Installing
 
  1. Build odvr.
  2. Run "make install" as root.
- 3. If you are not running Ubuntu, modify "41-odvr.rules" to fit your distro
+ 3. If you are not running Ubuntu, modify `41-odvr.rules` to fit your distro
     and install it. Don't forget to reload the udev rules. The other option is
     to run odvr as root, but this is not recommended.
 
@@ -46,14 +48,17 @@ run "udevcontrol reload_rules" and to replugin your DVR.
 
   For the impatient, run the following to test odvr:
 
+```
 $ sudo odvr -l
-
+```
 
 Usage
 =====
 
 Usage: odvr [options]
 -= Options =-
+
+```
   -h             : This help.
   -v             : Print version.
   -d <folder>    : Download all files in <folder>.
@@ -66,26 +71,34 @@ Usage: odvr [options]
   -D             : Enable debug tracing.
   -E             : Download everything in RAW format.
   -t             : Format downloaded wav files names as F-YYYYmmdd-HHMMss.
-
+```
 
 Examples
 ========
 
 List recording information:
 
+```
 $ odvr -l
+```
 
 Download all recordings in folder B:
 
+```
 $ odvr -d b
+```
 
 Download all recordings in the scheduled folder:
 
+```
 $ odvr -d s
+```
 
 List and download every recording:
 
+```
 $ odvr -l -e
+```
 
 
 Notes
@@ -108,13 +121,13 @@ odvr code that are endian sensitive, and the code hasn't been tested on
 big-endian machines. PPC Mac/Linux/BSD developers are more than welcome to
 submit patches!
 
-  odvr may get out-of-sync with the attached DVR. Use "-r" to force a DVR reset
-when odvr runs. For example, "odvr -r -l" will reset and then list recordings.
+  odvr may get out-of-sync with the attached DVR. Use `-r` to force a DVR reset
+when odvr runs. For example, `odvr -r -l` will reset and then list recordings.
 
   Some Olympus DVRs have a high-quality encoding option (PULCOD). This
 encoding type is not directly supported and odvr will complain about it. Use a
 different quality level for your recordings or you can use the unsupported
-"sandec" program that that is included with this source. Use odvr to
-download the raw files, then run "sandec" with the filename of the raw file.
+`sandec` program that that is included with this source. Use odvr to
+download the raw files, then run `sandec` with the filename of the raw file.
 You can also convert all raw files downloaded to odvr folder automatically
 running the bash script also included in this source  `./convert_raw_files.sh`.
