@@ -30,7 +30,7 @@
 #define VERSION    "0.1.5"
 
 void download_folder(odvr dev, uint8_t folder, int opt_time);
-void download_folder_raw(odvr dev, uint8_t folder);
+void download_folder_raw(odvr dev, uint8_t folder, int opt_time);
 
 void print_listing(odvr dev);
 int  user_confirmed(const char *);
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]){
 
   if(opt_raw != 0)
     for(i = ODVR_FOLDER_A; i <= odvr_foldercount(dev); i++)
-      download_folder_raw(dev, i);
+      download_folder_raw(dev, i, opt_time);
 
   if(opt_clear){
     if(opt_yesall || user_confirmed("delete all recordings")){
@@ -277,12 +277,13 @@ void download_folder(odvr dev, uint8_t folder, int opt_time){
   }
 }
 
-void download_folder_raw(odvr dev, uint8_t folder){
+void download_folder_raw(odvr dev, uint8_t folder, int opt_time){
   filestat_t  instat;
   struct stat outstat;
   FILE       *out;
   uint8_t     slot;
   char        fn[128];
+  char        ftime[32];
 
   for(slot = 1; slot <= odvr_filecount(dev, folder); slot++){
     if(odvr_filestat(dev, folder, slot, &instat) < 0){
@@ -290,7 +291,12 @@ void download_folder_raw(odvr dev, uint8_t folder){
       continue;
     }
 
-    sprintf(fn, "D%c_%04d.raw", odvr_foldername(dev, folder), instat.id);
+    if (opt_time > 0) {
+      odvr_filetime(ftime, instat);
+      sprintf(fn, "%c-%s.raw", odvr_foldername(dev, folder), ftime);
+    } else {
+      sprintf(fn, "D%c_%04d.raw", odvr_foldername(dev, folder), instat.id);
+    }
 
     if(stat(fn, &outstat) == 0){
       fprintf(stderr, "\"%s\" already exists. Skipping this file.\n", fn);
