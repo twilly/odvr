@@ -65,6 +65,7 @@ Usage: odvr [options]
   -r             : Reset the DVR. This may fix some sync issues.
   -D             : Enable debug tracing.
   -E             : Download everything in RAW format.
+  -t             : Format downloaded wav files names as F-YYYYmmdd-HHMMss.
 
 
 Examples
@@ -78,7 +79,7 @@ Download all recordings in folder B:
 
 $ odvr -d b
 
-Download all recordings in the scheduled folder: 
+Download all recordings in the scheduled folder:
 
 $ odvr -d s
 
@@ -112,9 +113,8 @@ when odvr runs. For example, "odvr -r -l" will reset and then list recordings.
 
   Some Olympus DVRs have a high-quality encoding option (PULCOD). This
 encoding type is not directly supported and odvr will complain about it. Use a
-different quality level for your recordings or you can use the unsupported 
-"sandec" program that that is included with this source. Use odvr to 
+different quality level for your recordings or you can use the unsupported
+"sandec" program that that is included with this source. Use odvr to
 download the raw files, then run "sandec" with the filename of the raw file.
-You can also convert all raw files downloaded to odvr folder automatically 
+You can also convert all raw files downloaded to odvr folder automatically
 running the bash script also included in this source  `./convert_raw_files.sh`.
-
